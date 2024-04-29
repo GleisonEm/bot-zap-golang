@@ -1,0 +1,10 @@
+*.db
+tmp
+.idea
+.DS_Store
+history-*.json
+main
+main.exe
+*.jpe
+src/pkged.go
+storages
