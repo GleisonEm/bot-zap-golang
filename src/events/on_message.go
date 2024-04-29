@@ -27,21 +27,22 @@ type ExtractedMedia struct {
 }
 
 func OnMessage(evt *events.Message) {
-	// fmt.Println("RawMessage", evt.RawMessage)
+	fmt.Println("RawMessage", evt.RawMessage)
 
 	messageText := evt.Message.GetExtendedTextMessage().GetText()
 	argument := utils.GetArgument(messageText)
 	command := utils.ProcessCommand(messageText)
-	formattedJid, _ := utils.GetLastJid(evt.Info.SourceString())
+	sender := evt.Info.Sender.User + "@" + evt.Info.Sender.Server
+	fromChat := evt.Info.Chat.String()
 	stanzaID := evt.Info.ID
 
-	fmt.Println(argument, "\t", formattedJid)
+	fmt.Println(argument, "\t", sender, "\t", evt.Info.Sender.Server, "\t", evt.Info.Chat)
 	if command == "!audio" {
-		ServiceAppContext.Context.SendService.SendAudioFunny(context.Background(), formattedJid, argument, stanzaID, messageText)
+		ServiceAppContext.Context.SendService.SendAudioFunny(context.Background(), fromChat, sender, argument, stanzaID, messageText)
 	}
 
 	if command == "@todes" {
-		ServiceAppContext.Context.SendService.SendMessage(context.Background(), formattedJid, argument, stanzaID, messageText, DomainBot.SendMessageParams{
+		ServiceAppContext.Context.SendService.SendMessage(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageParams{
 			MentionAllUsers: true,
 		})
 	}
@@ -66,7 +67,7 @@ func OnMessage(evt *events.Message) {
 					log.Errorf("Failed to convert audio to text: %v", errSendToRecogntionApiAudioFile)
 				}
 
-				ServiceAppContext.Context.SendService.SendMessage(context.Background(), formattedJid, argument, stanzaID, messageText, DomainBot.SendMessageParams{
+				ServiceAppContext.Context.SendService.SendMessage(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageParams{
 					Message:         response.Text,
 					AudioMessage:    *audioMessage,
 					IsQuotedMessage: true,
@@ -94,7 +95,7 @@ func OnMessage(evt *events.Message) {
 				log.Errorf("Failed to convert audio to text: %v", errSendToRecogntionApiAudioFile)
 			}
 
-			ServiceAppContext.Context.SendService.SendMessage(context.Background(), formattedJid, argument, stanzaID, messageText, DomainBot.SendMessageParams{
+			ServiceAppContext.Context.SendService.SendMessage(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageParams{
 				Message:         response.Text,
 				AudioMessage:    *audioMessage,
 				IsQuotedMessage: true,

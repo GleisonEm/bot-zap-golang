@@ -496,12 +496,14 @@ func (service serviceSend) SendPoll(ctx context.Context, request domainSend.Poll
 	return response, nil
 }
 
-func (service serviceSend) SendAudioFunny(ctx context.Context, sender string, name string, stanzaID string, messageText string) {
-	dataWaRecipient, _ := whatsapp.ValidateJidWithLogin(service.WaCli, sender)
+func (service serviceSend) SendAudioFunny(ctx context.Context, fromChat string, sender string, name string, stanzaID string, messageText string) {
+	dataWaRecipient, _ := whatsapp.ValidateJidWithLogin(service.WaCli, fromChat)
 	// if err != nil {
 	// 	return nil, err
 	// }
 
+	fmt.Println("dataWaRecipient", dataWaRecipient.String())
+	participantJID := sender
 	audioDownloaded, errAudioDownloaded := services.SearchAudioFunnyReturnFile(name)
 
 	if errAudioDownloaded != nil {
@@ -524,12 +526,12 @@ func (service serviceSend) SendAudioFunny(ctx context.Context, sender string, na
 		fmt.Println("mandado react", s, err2)
 	}
 
-	duration := 120 // 2 minutos
+	duration := 2 // 2 minutos
 
 	// Converta a duração para uint32 e pegue o endereço
 	seconds := uint32(duration)
 	secondsPtr := &seconds
-	fmt.Println("object audio uploaded", audioUploaded)
+	fmt.Println("dataWaRecipient.String()", dataWaRecipient.String(), "\t", participantJID)
 
 	msg := &waProto.Message{
 		AudioMessage: &waProto.AudioMessage{
@@ -546,7 +548,7 @@ func (service serviceSend) SendAudioFunny(ctx context.Context, sender string, na
 					Conversation: proto.String(messageText),
 				},
 				StanzaId:    &stanzaID,
-				Participant: proto.String(dataWaRecipient.String()), // O participante é quem enviou a mensagem original
+				Participant: proto.String(participantJID), // O participante é quem enviou a mensagem original
 			},
 		},
 	}
@@ -556,9 +558,9 @@ func (service serviceSend) SendAudioFunny(ctx context.Context, sender string, na
 }
 
 func (service serviceSend) SendMessage(
-	ctx context.Context, sender string, name string, stanzaID string, messageText string, sendMessageParams domainBot.SendMessageParams,
+	ctx context.Context, fromChat string, sender string, name string, stanzaID string, messageText string, sendMessageParams domainBot.SendMessageParams,
 ) {
-	dataWaRecipient, _ := whatsapp.ValidateJidWithLogin(service.WaCli, sender)
+	dataWaRecipient, _ := whatsapp.ValidateJidWithLogin(service.WaCli, fromChat)
 	msg := &waProto.Message{}
 	// if err != nil {
 	// 	return nil, err
@@ -568,7 +570,7 @@ func (service serviceSend) SendMessage(
 	}
 
 	if sendMessageParams.Message != "" && sendMessageParams.IsQuotedMessage {
-		participantJID := dataWaRecipient.String()
+		participantJID := sender
 		if len(stanzaID) < 28 {
 			firstDevice, _ := service.appService.FirstDevice(ctx)
 			if firstDevice.Device != "" {
@@ -576,7 +578,6 @@ func (service serviceSend) SendMessage(
 			}
 		}
 
-		fmt.Println("sendMessageParams.AudioMessage", sendMessageParams.AudioMessage)
 		msg = &waProto.Message{
 			ExtendedTextMessage: &waProto.ExtendedTextMessage{
 				Text: proto.String(sendMessageParams.Message),
