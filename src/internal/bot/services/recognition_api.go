@@ -43,7 +43,7 @@ func SendToRecogntionApiAudioFile(filePath string) (*DomainBot.ResponseRecogniti
 	}
 
 	// Cria a solicitação POST
-	req, err := http.NewRequest("POST", "http://192.168.0.106:5000/extractTextByAudio", &requestBody)
+	req, err := http.NewRequest("POST", "http://159.223.198.152:5000/extractTextByAudio", &requestBody)
 	if err != nil {
 		return nil, err
 	}

@@ -30,7 +30,6 @@ func OnMessage(evt *events.Message) {
 	fromChat := evt.Info.Chat.String()
 	stanzaID := evt.Info.ID
 	// fmt.Println("Received message ", string(evt.Info.ID), evt.Info.SourceString(), "is group:", evt.Info.IsGroup)
-
 	// , "is user", evt.Info.Chat.IsUser(), "is broadcast", evt.Info.Chat.IsBroadcast(), "is server", evt.Info.Chat.IsServer(), "is status", evt.Info.Chat.IsStatus(), "is group", evt.Info.Chat.IsGroup(), "is user", evt.Info.Chat.IsUser(), "is broadcast", evt.Info.Chat.IsBroadcast(), "is server", evt.Info.Chat.IsServer(), "is status", evt.Info.Chat.IsStatus()
 	// fmt.Println(argument, "\t", sender, "\t", evt.Info.Sender.Server, "\t", evt.Info.Chat)
 
