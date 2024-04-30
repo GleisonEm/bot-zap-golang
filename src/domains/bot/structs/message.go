@@ -9,5 +9,6 @@ type SendMessageParams struct {
 	Message         string
 	MentionUsers    []string
 	IsQuotedMessage bool
-	AudioMessage    waProto.AudioMessage
+	AudioMessage    *waProto.AudioMessage
+	IsQuotedType    string
 }

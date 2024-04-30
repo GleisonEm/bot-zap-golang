@@ -498,6 +498,7 @@ func (service serviceSend) SendPoll(ctx context.Context, request domainSend.Poll
 
 func (service serviceSend) SendAudioFunny(ctx context.Context, fromChat string, sender string, name string, stanzaID string, messageText string) {
 	dataWaRecipient, _ := whatsapp.ValidateJidWithLogin(service.WaCli, fromChat)
+	dataWaRecipientSender, _ := whatsapp.ValidateJidWithLogin(service.WaCli, sender)
 	// if err != nil {
 	// 	return nil, err
 	// }
@@ -507,8 +508,8 @@ func (service serviceSend) SendAudioFunny(ctx context.Context, fromChat string, 
 	audioDownloaded, errAudioDownloaded := services.SearchAudioFunnyReturnFile(name)
 
 	if errAudioDownloaded != nil {
-		s, err2 := service.WaCli.SendMessage(context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipient, types.JID{
-			User:   dataWaRecipient.String(), //Agus
+		s, err2 := service.WaCli.SendMessage(context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipientSender, types.JID{
+			User:   sender, //Agus
 			Server: types.DefaultUserServer,
 		}, stanzaID, "❌"))
 		fmt.Println("send message error download audio in errAudioDownloaded", s, err2)
@@ -519,8 +520,8 @@ func (service serviceSend) SendAudioFunny(ctx context.Context, fromChat string, 
 	audioUploaded, err := service.WaCli.Upload(context.Background(), audioDownloaded, whatsmeow.MediaAudio)
 	if err != nil {
 		fmt.Sprintf("Failed to upload audio: %v", err)
-		s, err2 := service.WaCli.SendMessage(context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipient, types.JID{
-			User:   dataWaRecipient.String(), //Agus
+		s, err2 := service.WaCli.SendMessage(context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipientSender, types.JID{
+			User:   sender, //Agus
 			Server: types.DefaultUserServer,
 		}, stanzaID, "❌"))
 		fmt.Println("mandado react", s, err2)
@@ -554,13 +555,14 @@ func (service serviceSend) SendAudioFunny(ctx context.Context, fromChat string, 
 	}
 
 	s, err2 := service.WaCli.SendMessage(context.Background(), dataWaRecipient, msg)
-	fmt.Println("mandado", s, err2)
+	fmt.Println("mandado audio funny", s, err2)
 }
 
 func (service serviceSend) SendMessage(
 	ctx context.Context, fromChat string, sender string, name string, stanzaID string, messageText string, sendMessageParams domainBot.SendMessageParams,
 ) {
 	dataWaRecipient, _ := whatsapp.ValidateJidWithLogin(service.WaCli, fromChat)
+
 	msg := &waProto.Message{}
 	// if err != nil {
 	// 	return nil, err
@@ -585,7 +587,7 @@ func (service serviceSend) SendMessage(
 					StanzaId:    &stanzaID,
 					Participant: proto.String(participantJID),
 					QuotedMessage: &waProto.Message{
-						AudioMessage: &sendMessageParams.AudioMessage,
+						AudioMessage: sendMessageParams.AudioMessage,
 					},
 				},
 			},
@@ -633,5 +635,5 @@ func (service serviceSend) SendMessage(
 	}
 
 	s, err2 := service.WaCli.SendMessage(context.Background(), dataWaRecipient, msg)
-	fmt.Println("mandado", s, err2)
+	fmt.Println("mandado send", s, err2, msg.String())
 }

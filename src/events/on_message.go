@@ -3,20 +3,10 @@ package events
 import (
 	"context"
 	"fmt"
-	"mime"
-	"os"
-	"time"
 
-	"github.com/GleisonEm/bot-claudio-zap-golang/config"
 	ServiceAppContext "github.com/GleisonEm/bot-claudio-zap-golang/contexts"
 	DomainBot "github.com/GleisonEm/bot-claudio-zap-golang/domains/bot/structs"
-	ServicesBot "github.com/GleisonEm/bot-claudio-zap-golang/internal/bot/services"
 	"github.com/GleisonEm/bot-claudio-zap-golang/pkg/utils"
-	"github.com/gofiber/fiber/v2/log"
-	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
-	"go.mau.fi/whatsmeow"
-	waProto "go.mau.fi/whatsmeow/binary/proto"
 	"go.mau.fi/whatsmeow/types/events"
 )
 
@@ -28,15 +18,23 @@ type ExtractedMedia struct {
 
 func OnMessage(evt *events.Message) {
 	fmt.Println("RawMessage", evt.RawMessage)
-
-	messageText := evt.Message.GetExtendedTextMessage().GetText()
+	messageText := ""
+	if evt.Message.GetExtendedTextMessage().GetText() != "" {
+		messageText = evt.Message.GetExtendedTextMessage().GetText()
+	} else if evt.Message.GetConversation() != "" {
+		messageText = evt.Message.GetConversation()
+	}
 	argument := utils.GetArgument(messageText)
 	command := utils.ProcessCommand(messageText)
 	sender := evt.Info.Sender.User + "@" + evt.Info.Sender.Server
 	fromChat := evt.Info.Chat.String()
 	stanzaID := evt.Info.ID
+	// fmt.Println("Received message ", string(evt.Info.ID), evt.Info.SourceString(), "is group:", evt.Info.IsGroup)
 
-	fmt.Println(argument, "\t", sender, "\t", evt.Info.Sender.Server, "\t", evt.Info.Chat)
+	// , "is user", evt.Info.Chat.IsUser(), "is broadcast", evt.Info.Chat.IsBroadcast(), "is server", evt.Info.Chat.IsServer(), "is status", evt.Info.Chat.IsStatus(), "is group", evt.Info.Chat.IsGroup(), "is user", evt.Info.Chat.IsUser(), "is broadcast", evt.Info.Chat.IsBroadcast(), "is server", evt.Info.Chat.IsServer(), "is status", evt.Info.Chat.IsStatus()
+	// fmt.Println(argument, "\t", sender, "\t", evt.Info.Sender.Server, "\t", evt.Info.Chat)
+
+	fmt.Println("command", command, "argument", argument, "sender", sender, "fromChat", fromChat, "stanzaID", stanzaID, "messageText", messageText, evt.Message.GetConversation(), evt.Message.String())
 	if command == "!audio" {
 		ServiceAppContext.Context.SendService.SendAudioFunny(context.Background(), fromChat, sender, argument, stanzaID, messageText)
 	}
@@ -47,95 +45,29 @@ func OnMessage(evt *events.Message) {
 		})
 	}
 
-	if command == "!transcrever" {
-		audioMessage := evt.RawMessage.ExtendedTextMessage.ContextInfo.QuotedMessage.GetAudioMessage()
-		if audioMessage != nil {
-			path, err := ExtractMedia(config.PathStorages, audioMessage)
-			if err != nil {
-				log.Errorf("Failed to download audio: %v", err)
-			} else {
-				log.Infof("audio downloaded to %s", path)
-				filePathAudio := fmt.Sprintf("%s/%d-%s%s", config.PathStorages, time.Now().Unix(), uuid.NewString(), ".wav")
-				errConvertOgaToWav := utils.ConvertOgaToWav(path.MediaPath, filePathAudio)
-
-				if errConvertOgaToWav != nil {
-					log.Errorf("Failed to convert audio: %v", errConvertOgaToWav)
-				}
-				response, errSendToRecogntionApiAudioFile := ServicesBot.SendToRecogntionApiAudioFile(filePathAudio)
-
-				if errSendToRecogntionApiAudioFile != nil {
-					log.Errorf("Failed to convert audio to text: %v", errSendToRecogntionApiAudioFile)
-				}
-
-				ServiceAppContext.Context.SendService.SendMessage(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageParams{
-					Message:         response.Text,
-					AudioMessage:    *audioMessage,
-					IsQuotedMessage: true,
-				})
-			}
-		}
+	if command == "!balinha" {
+		ServiceAppContext.Context.SendService.SendMessage(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageParams{
+			Message: "Aí é com o famoso 😉",
+		})
 	}
 
-	audioMessage := evt.Message.GetAudioMessage()
-	if audioMessage != nil {
-		path, err := ExtractMedia(config.PathStorages, audioMessage)
-		if err != nil {
-			log.Errorf("Failed to download audio: %v", err)
-		} else {
-			log.Infof("audio downloaded to %s", path)
-			filePathAudio := fmt.Sprintf("%s/%d-%s%s", config.PathStorages, time.Now().Unix(), uuid.NewString(), ".wav")
-			errConvertOgaToWav := utils.ConvertOgaToWav(path.MediaPath, filePathAudio)
-
-			if errConvertOgaToWav != nil {
-				log.Errorf("Failed to convert audio: %v", errConvertOgaToWav)
-			}
-			response, errSendToRecogntionApiAudioFile := ServicesBot.SendToRecogntionApiAudioFile(filePathAudio)
-
-			if errSendToRecogntionApiAudioFile != nil {
-				log.Errorf("Failed to convert audio to text: %v", errSendToRecogntionApiAudioFile)
-			}
-
-			ServiceAppContext.Context.SendService.SendMessage(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageParams{
-				Message:         response.Text,
-				AudioMessage:    *audioMessage,
-				IsQuotedMessage: true,
+	if command == "!transcrever" {
+		audioMessage := evt.RawMessage.ExtendedTextMessage.ContextInfo.QuotedMessage.GetAudioMessage()
+		// fmt.Println("audio message transcrever", audioMessage)
+		if audioMessage != nil {
+			ServiceAppContext.Context.MessageService.ConvertMessageAudioToText(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageParams{
+				AudioMessage: audioMessage,
 			})
 		}
 	}
-}
 
-func ExtractMedia(storageLocation string, mediaFile whatsmeow.DownloadableMessage) (extractedMedia ExtractedMedia, err error) {
-	if mediaFile == nil {
-		logrus.Info("Skip download because data is nil")
-		return extractedMedia, nil
+	if !evt.Info.IsGroup {
+		audioMessage := evt.Message.GetAudioMessage()
+		// fmt.Println("audio message direto", audioMessage)
+		if audioMessage != nil {
+			ServiceAppContext.Context.MessageService.ConvertMessageAudioToText(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageParams{
+				AudioMessage: audioMessage,
+			})
+		}
 	}
-
-	data, err := (ServiceAppContext.Context.AppService.GetWaCli(context.Background())).Download(mediaFile)
-	if err != nil {
-		return extractedMedia, err
-	}
-
-	switch media := mediaFile.(type) {
-	case *waProto.ImageMessage:
-		extractedMedia.MimeType = media.GetMimetype()
-		extractedMedia.Caption = media.GetCaption()
-	case *waProto.AudioMessage:
-		extractedMedia.MimeType = media.GetMimetype()
-	case *waProto.VideoMessage:
-		extractedMedia.MimeType = media.GetMimetype()
-		extractedMedia.Caption = media.GetCaption()
-	case *waProto.StickerMessage:
-		extractedMedia.MimeType = media.GetMimetype()
-	case *waProto.DocumentMessage:
-		extractedMedia.MimeType = media.GetMimetype()
-		extractedMedia.Caption = media.GetCaption()
-	}
-
-	extensions, _ := mime.ExtensionsByType(extractedMedia.MimeType)
-	extractedMedia.MediaPath = fmt.Sprintf("%s/%d-%s%s", storageLocation, time.Now().Unix(), uuid.NewString(), extensions[0])
-	err = os.WriteFile(extractedMedia.MediaPath, data, 0600)
-	if err != nil {
-		return extractedMedia, err
-	}
-	return extractedMedia, nil
 }
