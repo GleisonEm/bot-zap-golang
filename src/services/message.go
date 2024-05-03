@@ -122,19 +122,15 @@ func (service serviceMessage) ConvertMessageAudioToText(
 	dataWaRecipientSender, _ := whatsapp.ValidateJidWithLogin(service.WaCli, sender)
 	audioMessage := &sendMessageParams.AudioMessage
 
-	reactLoading, errReactLoading := service.WaCli.SendMessage(context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipientSender, types.JID{
-		User:   sender, //Agus
-		Server: types.DefaultUserServer,
-	}, stanzaID, "⏳"))
+	reactLoading, errReactLoading := service.WaCli.SendMessage(context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipient, dataWaRecipientSender, stanzaID, "⏳"))
 	fmt.Println("mandado react", reactLoading, errReactLoading)
 
 	path, err := ServiceAppContext.Context.MessageService.ExtractMedia(context.Background(), config.PathStorages, *audioMessage)
 	if err != nil {
 		log.Errorf("Failed to download audio: %v", err)
-		s, err2 := service.WaCli.SendMessage(context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipientSender, types.JID{
-			User:   sender, //Agus
-			Server: types.DefaultUserServer,
-		}, stanzaID, "❌"))
+		s, err2 := service.WaCli.SendMessage(
+			context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipient, dataWaRecipientSender, stanzaID, "❌"),
+		)
 		fmt.Println("mandado react", s, err2)
 	} else {
 		log.Infof("audio downloaded to %s", path)
@@ -142,20 +138,18 @@ func (service serviceMessage) ConvertMessageAudioToText(
 		errConvertOgaToWav := utils.ConvertOgaToWav(path.MediaPath, filePathAudio)
 
 		if errConvertOgaToWav != nil {
-			s, err2 := service.WaCli.SendMessage(context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipientSender, types.JID{
-				User:   sender, //Agus
-				Server: types.DefaultUserServer,
-			}, stanzaID, "❌"))
+			s, err2 := service.WaCli.SendMessage(
+				context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipient, dataWaRecipientSender, stanzaID, "❌"),
+			)
 			fmt.Println("mandado react", s, err2)
 			log.Errorf("Failed to convert audio: %v", errConvertOgaToWav)
 		}
 		response, errSendToRecogntionApiAudioFile := ServicesBot.SendToRecogntionApiAudioFile(filePathAudio)
 
 		if errSendToRecogntionApiAudioFile != nil {
-			s, err2 := service.WaCli.SendMessage(context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipientSender, types.JID{
-				User:   sender, //Agus
-				Server: types.DefaultUserServer,
-			}, stanzaID, "❌"))
+			s, err2 := service.WaCli.SendMessage(
+				context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipient, dataWaRecipientSender, stanzaID, "❌"),
+			)
 			fmt.Println("mandado react", s, err2)
 			log.Errorf("Failed to convert audio to text: %v", errSendToRecogntionApiAudioFile)
 		}
@@ -163,18 +157,14 @@ func (service serviceMessage) ConvertMessageAudioToText(
 		if response.Text == "" {
 			log.Errorf("Failed to convert audio to text: %v", "empty response")
 
-			s, err2 := service.WaCli.SendMessage(context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipientSender, types.JID{
-				User:   sender, //Agus
-				Server: types.DefaultUserServer,
-			}, stanzaID, "❌"))
+			s, err2 := service.WaCli.SendMessage(
+				context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipient, dataWaRecipientSender, stanzaID, "❌"),
+			)
 			fmt.Println("mandado react", s, err2)
 		}
 
-		reactSuccessLoading, errReactSuccessLoading := service.WaCli.SendMessage(context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipientSender, types.JID{
-			User:   sender, //Agus
-			Server: types.DefaultUserServer,
-		}, stanzaID, "✅"))
-		fmt.Println("mandado react", reactSuccessLoading, errReactSuccessLoading)
+		go service.WaCli.SendMessage(context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipient, dataWaRecipientSender, stanzaID, "✅"))
+
 		ServiceAppContext.Context.SendService.SendMessage(context.Background(), fromChat, sender, name, stanzaID, messageText, DomainBot.SendMessageParams{
 			Message:         response.Text,
 			AudioMessage:    *audioMessage,

@@ -6,8 +6,11 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/GleisonEm/bot-claudio-zap-golang/config"
+	ServiceAppContext "github.com/GleisonEm/bot-claudio-zap-golang/contexts"
+
 	"github.com/GleisonEm/bot-claudio-zap-golang/domains/app"
 	domainBot "github.com/GleisonEm/bot-claudio-zap-golang/domains/bot/structs"
 	domainSend "github.com/GleisonEm/bot-claudio-zap-golang/domains/send"
@@ -17,6 +20,7 @@ import (
 	"github.com/GleisonEm/bot-claudio-zap-golang/pkg/utils"
 	"github.com/GleisonEm/bot-claudio-zap-golang/pkg/whatsapp"
 	"github.com/GleisonEm/bot-claudio-zap-golang/validations"
+	"github.com/gofiber/fiber/v2/log"
 	fiberUtils "github.com/gofiber/fiber/v2/utils"
 	"github.com/h2non/bimg"
 	"github.com/sirupsen/logrus"
@@ -192,6 +196,66 @@ func (service serviceSend) SendImage(ctx context.Context, request domainSend.Ima
 	response.MessageID = ts.ID
 	response.Status = fmt.Sprintf("Message sent to %s (server timestamp: %s)", request.Phone, ts.Timestamp.String())
 	return response, nil
+}
+
+func (service serviceSend) SendSticker(ctx context.Context, fromChat string, sender string, name string, stanzaID string, messageText string, sendMessageStickerParams domainBot.SendMessageStickerParams) {
+
+	dataWaRecipient, _ := whatsapp.ValidateJidWithLogin(service.WaCli, fromChat)
+	dataWaRecipientSender, _ := whatsapp.ValidateJidWithLogin(service.WaCli, sender)
+	// // if err != nil {
+	// // 	return nil, err
+	// // }
+	imageMessage := &sendMessageStickerParams.ImageMessage
+
+	path, err := ServiceAppContext.Context.MessageService.ExtractMedia(context.Background(), config.PathStorages, *imageMessage)
+	if err != nil {
+		log.Errorf("Failed to download image to sticker: %v", err)
+		s, err2 := service.WaCli.SendMessage(context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipientSender, types.JID{
+			User:   sender, //Agus
+			Server: types.DefaultUserServer,
+		}, stanzaID, "❌"))
+		fmt.Println("mandado react", s, err2)
+	} else {
+		fmt.Println("path", path)
+		imageToWebp, errImageToWebp := services.ConvertToWebp(config.PathStorages, path.MediaPath)
+
+		if errImageToWebp != nil {
+			log.Errorf("Failed to convert image png to sticker: %v", err)
+			s, err2 := service.WaCli.SendMessage(context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipientSender, types.JID{
+				User:   sender, //Agus
+				Server: types.DefaultUserServer,
+			}, stanzaID, "❌"))
+			fmt.Println("mandado react", s, err2)
+		}
+		dataWaImage, err := os.ReadFile(imageToWebp)
+		if err != nil {
+			fmt.Println("Failed to read image: %v", err)
+		}
+
+		// Upload the image
+		uploadedImage, err := service.WaCli.Upload(ctx, dataWaImage, whatsmeow.MediaImage)
+		if err != nil {
+			fmt.Println("Failed to upload image: %v", err)
+		}
+		fmt.Println("mimetype", http.DetectContentType(dataWaImage))
+		// Create the sticker message
+		msg := &waProto.Message{StickerMessage: &waProto.StickerMessage{
+			Url:               proto.String(uploadedImage.URL),
+			DirectPath:        proto.String(uploadedImage.DirectPath),
+			MediaKey:          uploadedImage.MediaKey,
+			Mimetype:          proto.String(http.DetectContentType(dataWaImage)),
+			FileEncSha256:     uploadedImage.FileEncSHA256,
+			FileSha256:        uploadedImage.FileSHA256,
+			FileLength:        proto.Uint64(uint64(len(dataWaImage))),
+			MediaKeyTimestamp: proto.Int64(time.Now().Unix()),
+			IsAnimated:        proto.Bool(false),
+			StickerSentTs:     proto.Int64(time.Now().Unix()),
+			IsLottie:          proto.Bool(false),
+		}}
+
+		s, err2 := service.WaCli.SendMessage(context.Background(), dataWaRecipient, msg)
+		fmt.Println("mandado sticker", s, err2)
+	}
 }
 
 func (service serviceSend) SendFile(ctx context.Context, request domainSend.FileRequest) (response domainSend.GenericResponse, err error) {
@@ -508,10 +572,9 @@ func (service serviceSend) SendAudioFunny(ctx context.Context, fromChat string, 
 	audioDownloaded, errAudioDownloaded := services.SearchAudioFunnyReturnFile(name)
 
 	if errAudioDownloaded != nil {
-		s, err2 := service.WaCli.SendMessage(context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipientSender, types.JID{
-			User:   sender, //Agus
-			Server: types.DefaultUserServer,
-		}, stanzaID, "❌"))
+		s, err2 := service.WaCli.SendMessage(
+			context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipient, dataWaRecipientSender, stanzaID, "❌"),
+		)
 		fmt.Println("send message error download audio in errAudioDownloaded", s, err2)
 	}
 
@@ -520,10 +583,9 @@ func (service serviceSend) SendAudioFunny(ctx context.Context, fromChat string, 
 	audioUploaded, err := service.WaCli.Upload(context.Background(), audioDownloaded, whatsmeow.MediaAudio)
 	if err != nil {
 		fmt.Sprintf("Failed to upload audio: %v", err)
-		s, err2 := service.WaCli.SendMessage(context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipientSender, types.JID{
-			User:   sender, //Agus
-			Server: types.DefaultUserServer,
-		}, stanzaID, "❌"))
+		s, err2 := service.WaCli.SendMessage(
+			context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipient, dataWaRecipientSender, stanzaID, "❌"),
+		)
 		fmt.Println("mandado react", s, err2)
 	}
 

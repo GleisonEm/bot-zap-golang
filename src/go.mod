@@ -28,6 +28,7 @@ require (
 	github.com/antchfx/htmlquery v1.3.0 // indirect
 	github.com/antchfx/xpath v1.2.3 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
+	github.com/chai2010/webp v1.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fasthttp/websocket v1.5.8 // indirect
 	github.com/gofiber/template v1.8.3 // indirect

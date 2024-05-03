@@ -18,6 +18,7 @@ type ISendService interface {
 	SendPoll(ctx context.Context, request PollRequest) (response GenericResponse, err error)
 	SendAudioFunny(ctx context.Context, fromChat string, sender string, name string, stanzaID string, messageText string)
 	SendMessage(ctx context.Context, fromChat string, sender string, name string, stanzaID string, messageText string, sendMessageParams DomainBot.SendMessageParams)
+	SendSticker(ctx context.Context, fromChat string, sender string, name string, stanzaID string, messageText string, sendMessageStickerParams DomainBot.SendMessageStickerParams)
 }
 
 type GenericResponse struct {
