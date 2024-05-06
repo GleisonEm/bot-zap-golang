@@ -19,8 +19,8 @@ var (
 	PathMedia     = "statics/media"
 	PathStorages  = "storages"
 
-	DBName = "whatsapp.db"
-
+	DBName                      = "whatsapp.db"
+	ChatsDevEnabled             = ""
 	DBUri                       = os.Getenv("DATABASE_URI")
 	WhatsappAutoReplyMessage    string
 	WhatsappWebhook             string

@@ -59,6 +59,11 @@ func runRest(_ *cobra.Command, _ []string) {
 		fmt.Println("Erro ao carregar o arquivo .env")
 	} else {
 		config.DBUri = os.Getenv("DATABASE_URI")
+		envirovment := os.Getenv("ENV")
+		chatsDevEnabled := os.Getenv("CHATS_DEV_ENABLE")
+		if envirovment == "DEV" && chatsDevEnabled != "" {
+			config.ChatsDevEnabled = chatsDevEnabled
+		}
 	}
 
 	fmt.Println("carregou o env" + os.Getenv("DATABASE_URI"))

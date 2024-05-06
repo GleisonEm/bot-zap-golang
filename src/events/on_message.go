@@ -3,7 +3,9 @@ package events
 import (
 	"context"
 	"fmt"
+	"strings"
 
+	"github.com/GleisonEm/bot-claudio-zap-golang/config"
 	ServiceAppContext "github.com/GleisonEm/bot-claudio-zap-golang/contexts"
 	DomainBot "github.com/GleisonEm/bot-claudio-zap-golang/domains/bot/structs"
 	"github.com/GleisonEm/bot-claudio-zap-golang/pkg/utils"
@@ -33,11 +35,16 @@ func OnMessage(evt *events.Message) {
 	// if fromChat == "558796485300-1461896371@g.us" {
 	// 	return
 	// }
-	// fmt.Println("Received message ", string(evt.Info.ID), evt.Info.SourceString(), "is group:", evt.Info.IsGroup)
+	fmt.Println("Received message ", string(evt.Info.ID), evt.Info.SourceString(), "is group:", evt.Info.IsGroup)
 	// , "is user", evt.Info.Chat.IsUser(), "is broadcast", evt.Info.Chat.IsBroadcast(), "is server", evt.Info.Chat.IsServer(), "is status", evt.Info.Chat.IsStatus(), "is group", evt.Info.Chat.IsGroup(), "is user", evt.Info.Chat.IsUser(), "is broadcast", evt.Info.Chat.IsBroadcast(), "is server", evt.Info.Chat.IsServer(), "is status", evt.Info.Chat.IsStatus()
 	// fmt.Println(argument, "\t", sender, "\t", evt.Info.Sender.Server, "\t", evt.Info.Chat)
 
 	fmt.Println("command", command, "argument", argument, "sender", sender, "fromChat", fromChat, "stanzaID", stanzaID, "messageText", messageText, evt.Message.GetConversation(), evt.Message.String())
+
+	if !strings.Contains(config.ChatsDevEnabled, fromChat) {
+		return
+	}
+
 	if command == "!sticker" {
 		go ServiceAppContext.Context.SendService.SendSticker(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageStickerParams{
 			ImageMessage: evt.RawMessage.ExtendedTextMessage.ContextInfo.QuotedMessage.GetImageMessage(),
