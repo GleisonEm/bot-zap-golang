@@ -11,6 +11,7 @@ type SendMessageParams struct {
 	IsQuotedMessage bool
 	AudioMessage    *waProto.AudioMessage
 	IsQuotedType    string
+	MentionAdmin    bool
 }
 
 type SendMessageStickerParams struct {
@@ -18,5 +19,5 @@ type SendMessageStickerParams struct {
 	Message         string
 	MentionUsers    []string
 	IsQuotedMessage bool
-	ImageMessage   *waProto.ImageMessage
+	ImageMessage    *waProto.ImageMessage
 }

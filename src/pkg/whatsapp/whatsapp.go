@@ -6,9 +6,10 @@ import (
 	"fmt"
 
 	"github.com/GleisonEm/bot-claudio-zap-golang/config"
-	eventOnMessage "github.com/GleisonEm/bot-claudio-zap-golang/events"
+	eventsMessage "github.com/GleisonEm/bot-claudio-zap-golang/events"
 	"github.com/GleisonEm/bot-claudio-zap-golang/internal/websocket"
 	pkgError "github.com/GleisonEm/bot-claudio-zap-golang/pkg/error"
+	_ "github.com/lib/pq"
 
 	// "github.com/GleisonEm/bot-claudio-zap-golang/internal/rest/helpers"
 	"mime"
@@ -151,7 +152,9 @@ func InitWaDB() *sqlstore.Container {
 	// Running Whatsapp
 	log = waLog.Stdout("Main", config.WhatsappLogLevel, true)
 	dbLog := waLog.Stdout("Database", config.WhatsappLogLevel, true)
-	storeContainer, err := sqlstore.New("sqlite3", fmt.Sprintf("file:%s/%s?_foreign_keys=off", config.PathStorages, config.DBName), dbLog)
+	// storeContainer, err := sqlstore.New("sqlite3", fmt.Sprintf("file:%s/%s?_foreign_keys=off", config.PathStorages, config.DBName), dbLog)
+	fmt.Println("Erro ao carregar o arquivo .env " + config.DBUri)
+	storeContainer, err := sqlstore.New("postgres", config.DBUri, dbLog)
 	if err != nil {
 		log.Errorf("Failed to connect to database: %v", err)
 		panic(pkgError.InternalServerError(fmt.Sprintf("Failed to connect to database: %v", err)))
@@ -226,7 +229,7 @@ func handler(rawEvt interface{}) {
 	case *events.StreamReplaced:
 		os.Exit(0)
 	case *events.Message:
-		eventOnMessage.OnMessage(evt)
+		eventsMessage.OnMessage(evt)
 	case *events.Receipt:
 		if evt.Type == types.ReceiptTypeRead || evt.Type == types.ReceiptTypeReadSelf {
 			log.Infof("%v was read by %s at %s", evt.MessageIDs, evt.SourceString(), evt.Timestamp)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+
 	"github.com/GleisonEm/bot-claudio-zap-golang/cmd"
 )
 

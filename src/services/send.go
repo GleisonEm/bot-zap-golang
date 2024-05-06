@@ -696,6 +696,36 @@ func (service serviceSend) SendMessage(
 		fmt.Println("mandando mentioned")
 	}
 
+	if sendMessageParams.MentionAdmin {
+		groupInfo, _ := service.WaCli.GetGroupInfo(dataWaRecipient)
+		fmt.Println(groupInfo.Participants, groupInfo.ParticipantVersionID)
+
+		var mentionedJids []string
+		var textMentionedJids string
+		for _, participant := range groupInfo.Participants {
+
+			if participant.IsAdmin {
+				jid := participant.JID // substitua isso pela lógica correta para obter o JID
+				fmt.Println(participant.JID, participant.JID.User)
+				textMentionedJids += " @" + jid.User
+				mentionedJids = append(mentionedJids, jid.String())
+			}
+		}
+
+		fmt.Println("mandando mentioned", mentionedJids, textMentionedJids)
+		msg = &waProto.Message{
+			ExtendedTextMessage: &waProto.ExtendedTextMessage{
+				Text: proto.String("Supremacia Zaroquiana" + textMentionedJids),
+				ContextInfo: &waProto.ContextInfo{
+					// StanzaId:    request.ReplyMessageID,
+					// Participant: proto.String(dataWaRecipient.String()),
+					MentionedJid: mentionedJids,
+				},
+			},
+		}
+		fmt.Println("mandando mentioned")
+	}
+
 	s, err2 := service.WaCli.SendMessage(context.Background(), dataWaRecipient, msg)
 	fmt.Println("mandado send", s, err2, msg.String())
 }

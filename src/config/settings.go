@@ -1,6 +1,8 @@
 package config
 
 import (
+	"os"
+
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 )
 
@@ -19,6 +21,7 @@ var (
 
 	DBName = "whatsapp.db"
 
+	DBUri                       = os.Getenv("DATABASE_URI")
 	WhatsappAutoReplyMessage    string
 	WhatsappWebhook             string
 	WhatsappLogLevel                  = "ERROR"

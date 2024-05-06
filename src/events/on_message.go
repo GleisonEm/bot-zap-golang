@@ -30,9 +30,9 @@ func OnMessage(evt *events.Message) {
 	sender := evt.Info.Sender.User + "@" + evt.Info.Sender.Server
 	fromChat := evt.Info.Chat.String()
 	stanzaID := evt.Info.ID
-	if fromChat == "558796485300-1461896371@g.us" {
-		return
-	}
+	// if fromChat == "558796485300-1461896371@g.us" {
+	// 	return
+	// }
 	// fmt.Println("Received message ", string(evt.Info.ID), evt.Info.SourceString(), "is group:", evt.Info.IsGroup)
 	// , "is user", evt.Info.Chat.IsUser(), "is broadcast", evt.Info.Chat.IsBroadcast(), "is server", evt.Info.Chat.IsServer(), "is status", evt.Info.Chat.IsStatus(), "is group", evt.Info.Chat.IsGroup(), "is user", evt.Info.Chat.IsUser(), "is broadcast", evt.Info.Chat.IsBroadcast(), "is server", evt.Info.Chat.IsServer(), "is status", evt.Info.Chat.IsStatus()
 	// fmt.Println(argument, "\t", sender, "\t", evt.Info.Sender.Server, "\t", evt.Info.Chat)
@@ -51,6 +51,12 @@ func OnMessage(evt *events.Message) {
 	if command == "@todes" {
 		go handleTodes(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageParams{
 			MentionAllUsers: true,
+		})
+	}
+
+	if command == "@supremacy" {
+		go handleTodes(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageParams{
+			MentionAdmin: true,
 		})
 	}
 
