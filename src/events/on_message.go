@@ -3,9 +3,7 @@ package events
 import (
 	"context"
 	"fmt"
-	"strings"
 
-	"github.com/GleisonEm/bot-claudio-zap-golang/config"
 	ServiceAppContext "github.com/GleisonEm/bot-claudio-zap-golang/contexts"
 	DomainBot "github.com/GleisonEm/bot-claudio-zap-golang/domains/bot/structs"
 	"github.com/GleisonEm/bot-claudio-zap-golang/pkg/utils"
@@ -41,9 +39,9 @@ func OnMessage(evt *events.Message) {
 
 	fmt.Println("command", command, "argument", argument, "sender", sender, "fromChat", fromChat, "stanzaID", stanzaID, "messageText", messageText, evt.Message.GetConversation(), evt.Message.String())
 
-	if !strings.Contains(config.ChatsDevEnabled, fromChat) {
-		return
-	}
+	// if !strings.Contains(config.ChatsDevEnabled, fromChat) {
+	// 	return
+	// }
 
 	if command == "!sticker" {
 		go ServiceAppContext.Context.SendService.SendSticker(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageStickerParams{
@@ -73,26 +71,28 @@ func OnMessage(evt *events.Message) {
 		})
 	}
 
-	if command == "!documentacao" {
-		messageDoc := "Verificação documental completa."
-		if argument != "h1234" {
-			messageDoc = "Nenhum documento encontrado."
+	if !evt.Info.IsGroup {
+		if command == "!documentacao" {
+			messageDoc := "Verificação documental completa."
+			if argument != "h1234" {
+				messageDoc = "Nenhum documento encontrado."
+			}
+
+			ServiceAppContext.Context.SendService.SendMessage(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageParams{
+				Message: messageDoc,
+			})
 		}
 
-		ServiceAppContext.Context.SendService.SendMessage(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageParams{
-			Message: messageDoc,
-		})
-	}
+		if command == "!localizacao" {
+			messageLoc := "TE"
+			if argument != "h1234" {
+				messageLoc = "Nenhuma localização encontrada para esse documento."
+			}
 
-	if command == "!localizacao" {
-		messageLoc := "TE"
-		if argument != "h1234" {
-			messageLoc = "Nenhuma localização encontrada para esse documento."
+			ServiceAppContext.Context.SendService.SendMessage(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageParams{
+				Message: messageLoc,
+			})
 		}
-
-		ServiceAppContext.Context.SendService.SendMessage(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageParams{
-			Message: messageLoc,
-		})
 	}
 
 	if command == "!transcrever" {
