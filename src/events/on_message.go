@@ -79,7 +79,8 @@ func OnMessage(evt *events.Message) {
 			}
 
 			ServiceAppContext.Context.SendService.SendMessage(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageParams{
-				Message: messageDoc,
+				Message:         messageDoc,
+				IsQuotedMessage: true,
 			})
 		}
 
@@ -90,7 +91,8 @@ func OnMessage(evt *events.Message) {
 			}
 
 			ServiceAppContext.Context.SendService.SendMessage(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageParams{
-				Message: messageLoc,
+				Message:         messageLoc,
+				IsQuotedMessage: true,
 			})
 		}
 	}
