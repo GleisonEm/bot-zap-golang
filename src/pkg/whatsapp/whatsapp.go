@@ -152,9 +152,9 @@ func InitWaDB() *sqlstore.Container {
 	// Running Whatsapp
 	log = waLog.Stdout("Main", config.WhatsappLogLevel, true)
 	dbLog := waLog.Stdout("Database", config.WhatsappLogLevel, true)
-	// storeContainer, err := sqlstore.New("sqlite3", fmt.Sprintf("file:%s/%s?_foreign_keys=off", config.PathStorages, config.DBName), dbLog)
-	fmt.Println("Erro ao carregar o arquivo .env " + config.DBUri)
-	storeContainer, err := sqlstore.New("postgres", config.DBUri, dbLog)
+	storeContainer, err := sqlstore.New("sqlite3", fmt.Sprintf("file:%s/%s?_foreign_keys=off", config.PathStorages, config.DBName), dbLog)
+	// fmt.Println("Erro ao carregar o arquivo .env " + config.DBUri)
+	// storeContainer, err := sqlstore.New("postgres", config.DBUri, dbLog)
 	if err != nil {
 		log.Errorf("Failed to connect to database: %v", err)
 		panic(pkgError.InternalServerError(fmt.Sprintf("Failed to connect to database: %v", err)))

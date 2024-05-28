@@ -26,7 +26,7 @@ var (
 	WhatsappWebhook             string
 	WhatsappLogLevel                  = "ERROR"
 	WhatsappSettingMaxFileSize  int64 = 50000000  // 50MB
-	WhatsappSettingMaxVideoSize int64 = 100000000 // 100MB
+	WhatsappSettingMaxVideoSize int64 = 200000000 // 100MB
 	WhatsappTypeUser                  = "@s.whatsapp.net"
 	WhatsappTypeGroup                 = "@g.us"
 )

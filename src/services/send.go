@@ -729,3 +729,81 @@ func (service serviceSend) SendMessage(
 	s, err2 := service.WaCli.SendMessage(context.Background(), dataWaRecipient, msg)
 	fmt.Println("mandado send", s, err2, msg.String())
 }
+func (service serviceSend) SendVideoByBot(
+	ctx context.Context, fromChat string, sender string, name string, stanzaID string, messageText string,
+) {
+	dataWaRecipient, _ := whatsapp.ValidateJidWithLogin(service.WaCli, fromChat)
+	dataWaRecipientSender, _ := whatsapp.ValidateJidWithLogin(service.WaCli, sender)
+
+	msg := &waProto.Message{}
+	dataWaVideo, err := os.ReadFile(config.PathStorages + "/" + name + ".mp4")
+	if err != nil {
+		s, err2 := service.WaCli.SendMessage(
+			context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipient, dataWaRecipientSender, stanzaID, "❌"),
+		)
+		fmt.Println("send message error read video file in err", s, err2)
+		return
+	}
+
+	fmt.Println("fazendo upload do video...")
+	service.WaCli.SendMessage(
+		context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipient, dataWaRecipientSender, stanzaID, "⌛"),
+	)
+
+	uploaded, err := service.WaCli.Upload(context.Background(), dataWaVideo, whatsmeow.MediaVideo)
+	if err != nil {
+		fmt.Sprintf("Failed to upload video: %v", err)
+		s, err2 := service.WaCli.SendMessage(
+			context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipient, dataWaRecipientSender, stanzaID, "❌"),
+		)
+		fmt.Println("send message error upload video in err", s, err2)
+		return
+	}
+	videoThumbnail := config.PathStorages + "/thumb.jpg"
+	dataWaThumbnail, err := os.ReadFile(videoThumbnail)
+	if err != nil {
+		s, err2 := service.WaCli.SendMessage(
+			context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipient, dataWaRecipientSender, stanzaID, "❌"),
+		)
+		fmt.Println("send message error read thumbnail in err", s, err2)
+		return
+	}
+
+	msg = &waProto.Message{VideoMessage: &waProto.VideoMessage{
+		Url:                 proto.String(uploaded.URL),
+		Mimetype:            proto.String(http.DetectContentType(dataWaVideo)),
+		Caption:             proto.String("video"),
+		FileLength:          proto.Uint64(uploaded.FileLength),
+		FileSha256:          uploaded.FileSHA256,
+		FileEncSha256:       uploaded.FileEncSHA256,
+		MediaKey:            uploaded.MediaKey,
+		DirectPath:          proto.String(uploaded.DirectPath),
+		ViewOnce:            proto.Bool(false),
+		JpegThumbnail:       dataWaThumbnail,
+		ThumbnailEncSha256:  dataWaThumbnail,
+		ThumbnailSha256:     dataWaThumbnail,
+		ThumbnailDirectPath: proto.String(uploaded.DirectPath),
+	}}
+	fmt.Println("enviando o video...")
+	service.WaCli.SendMessage(
+		context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipient, dataWaRecipientSender, stanzaID, "⏳"),
+	)
+
+	ts, err := service.WaCli.SendMessage(ctx, dataWaRecipient, msg)
+	if err != nil {
+		s, err2 := service.WaCli.SendMessage(
+			context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipient, dataWaRecipientSender, stanzaID, "❌"),
+		)
+		fmt.Println("send message error send video message in err", s, err2)
+		return
+	}
+
+	// go func() {
+	// 	errDelete := utils.RemoveFile(1, deletedItems...)
+	// 	if errDelete != nil {
+	// 		logrus.Infof("error when deleting picture: %v", errDelete)
+	// 	}
+	// }()
+
+	fmt.Sprintf("Video sent to %s (server timestamp: %s)", ts.Timestamp.String())
+}

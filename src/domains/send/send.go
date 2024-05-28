@@ -17,6 +17,7 @@ type ISendService interface {
 	SendAudio(ctx context.Context, request AudioRequest) (response GenericResponse, err error)
 	SendPoll(ctx context.Context, request PollRequest) (response GenericResponse, err error)
 	SendAudioFunny(ctx context.Context, fromChat string, sender string, name string, stanzaID string, messageText string)
+	SendVideoByBot(ctx context.Context, fromChat string, sender string, name string, stanzaID string, messageText string)
 	SendMessage(ctx context.Context, fromChat string, sender string, name string, stanzaID string, messageText string, sendMessageParams DomainBot.SendMessageParams)
 	SendSticker(ctx context.Context, fromChat string, sender string, name string, stanzaID string, messageText string, sendMessageStickerParams DomainBot.SendMessageStickerParams)
 }

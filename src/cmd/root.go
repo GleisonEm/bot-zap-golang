@@ -61,7 +61,7 @@ func runRest(_ *cobra.Command, _ []string) {
 		config.DBUri = os.Getenv("DATABASE_URI")
 		envirovment := os.Getenv("ENV")
 		chatsDevEnabled := os.Getenv("CHATS_DEV_ENABLE")
-		if envirovment == "DEV" && chatsDevEnabled != "" {
+		if envirovment == "dev" && chatsDevEnabled != "" {
 			config.ChatsDevEnabled = chatsDevEnabled
 		}
 	}
