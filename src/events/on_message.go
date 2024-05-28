@@ -73,6 +73,28 @@ func OnMessage(evt *events.Message) {
 		})
 	}
 
+	if command == "!documentacao" {
+		messageDoc := "Verificação documental completa."
+		if argument != "h1234" {
+			messageDoc = "Nenhum documento encontrado."
+		}
+
+		ServiceAppContext.Context.SendService.SendMessage(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageParams{
+			Message: messageDoc,
+		})
+	}
+
+	if command == "!localizacao" {
+		messageLoc := "TE"
+		if argument != "h1234" {
+			messageLoc = "Nenhuma localização encontrada para esse documento."
+		}
+
+		ServiceAppContext.Context.SendService.SendMessage(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageParams{
+			Message: messageLoc,
+		})
+	}
+
 	if command == "!transcrever" {
 		audioMessage := evt.RawMessage.ExtendedTextMessage.ContextInfo.QuotedMessage.GetAudioMessage()
 		// fmt.Println("audio message transcrever", audioMessage)
