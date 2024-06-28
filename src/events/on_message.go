@@ -39,7 +39,7 @@ func OnMessage(evt *events.Message) {
 	// fmt.Println(argument, "\t", sender, "\t", evt.Info.Sender.Server, "\t", evt.Info.Chat)
 
 	fmt.Println("command", command, "argument", argument, "sender", sender, "fromChat", fromChat, "stanzaID", stanzaID, "messageText", messageText, evt.Message.GetConversation(), evt.Message.String())
-	return
+
 	// if !strings.Contains(config.ChatsDevEnabled, fromChat) {
 	// 	return
 	// }

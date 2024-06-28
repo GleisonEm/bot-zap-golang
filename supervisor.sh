@@ -1,6 +1,6 @@
 [program:bot-zap-golang]
-directory=/home/bot-zap-golang
-command=/home/bot-zap-golang/main
+directory=/home/ubuntu/bot-zap-golang/src
+command=/home/ubuntu/bot-zap-golang/src/main
 autostart=true
 autorestart=true
 stderr_logfile=/var/log/bot-zap-golang.err.log
