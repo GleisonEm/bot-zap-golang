@@ -217,10 +217,10 @@ func (service serviceSend) SendSticker(ctx context.Context, fromChat string, sen
 		fmt.Println("mandado react", s, err2)
 	} else {
 		fmt.Println("path", path)
-		imageToWebp, errImageToWebp := services.ConvertToWebp(config.PathStorages, path.MediaPath)
+		imageToWebp, errImageToWebp := services.ConvertJpegToWebp(config.PathStorages, path.MediaPath)
 
 		if errImageToWebp != nil {
-			log.Errorf("Failed to convert image png to sticker: %v", err)
+			log.Errorf("Failed to convert image png to sticker: %v", errImageToWebp)
 			s, err2 := service.WaCli.SendMessage(context.Background(), dataWaRecipient, service.WaCli.BuildReaction(dataWaRecipientSender, types.JID{
 				User:   sender, //Agus
 				Server: types.DefaultUserServer,

@@ -3,6 +3,7 @@ package events
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	ServiceAppContext "github.com/GleisonEm/bot-claudio-zap-golang/contexts"
 	DomainBot "github.com/GleisonEm/bot-claudio-zap-golang/domains/bot/structs"
@@ -38,11 +39,21 @@ func OnMessage(evt *events.Message) {
 	// , "is user", evt.Info.Chat.IsUser(), "is broadcast", evt.Info.Chat.IsBroadcast(), "is server", evt.Info.Chat.IsServer(), "is status", evt.Info.Chat.IsStatus(), "is group", evt.Info.Chat.IsGroup(), "is user", evt.Info.Chat.IsUser(), "is broadcast", evt.Info.Chat.IsBroadcast(), "is server", evt.Info.Chat.IsServer(), "is status", evt.Info.Chat.IsStatus()
 	// fmt.Println(argument, "\t", sender, "\t", evt.Info.Sender.Server, "\t", evt.Info.Chat)
 
-	fmt.Println("command", command, "argument", argument, "sender", sender, "fromChat", fromChat, "stanzaID", stanzaID, "messageText", messageText, evt.Message.GetConversation(), evt.Message.String())
+	// fmt.Println("command", command, "argument", argument, "sender", sender, "fromChat", fromChat, "stanzaID", stanzaID, "messageText", messageText, evt.Message.GetConversation(), evt.Message.String())
 
 	// if !strings.Contains(config.ChatsDevEnabled, fromChat) {
 	// 	return
 	// }
+
+	imgMessage := evt.RawMessage.GetImageMessage()
+
+	if imgMessage != nil {
+		if imgMessage.GetCaption() == "!sticker" {
+			go ServiceAppContext.Context.SendService.SendSticker(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageStickerParams{
+				ImageMessage: imgMessage,
+			})
+		}
+	}
 
 	if command == "!sticker" {
 		go ServiceAppContext.Context.SendService.SendSticker(context.Background(), fromChat, sender, argument, stanzaID, messageText, DomainBot.SendMessageStickerParams{
@@ -51,7 +62,8 @@ func OnMessage(evt *events.Message) {
 	}
 
 	if command == "!audio" {
-		go ServiceAppContext.Context.SendService.SendAudioFunny(context.Background(), fromChat, sender, argument, stanzaID, messageText)
+		audioName := strings.Replace(messageText, "!audio", "", -1)
+		go ServiceAppContext.Context.SendService.SendAudioFunny(context.Background(), fromChat, sender, audioName, stanzaID, messageText)
 	}
 
 	if command == "@todes" {
