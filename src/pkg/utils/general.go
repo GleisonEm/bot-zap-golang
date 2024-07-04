@@ -48,7 +48,7 @@ func isMn(r rune) bool {
 	return unicode.Is(unicode.Mn, r) // Mn: nonspacing marks
 }
 
-func removeAccents(s string) (string, error) {
+func RemoveAccents(s string) (string, error) {
 	t := transform.Chain(norm.NFD, transform.RemoveFunc(isMn), norm.NFC)
 	result, _, err := transform.String(t, s)
 	if err != nil {
@@ -70,7 +70,7 @@ func ProcessCommand(msg string) string {
 	parts := strings.Split(msg, " ")
 	command := parts[0]
 	command = strings.ToLower(command)
-	command, err := removeAccents(command)
+	command, err := RemoveAccents(command)
 	if err != nil {
 		return ""
 	}

@@ -62,7 +62,10 @@ func OnMessage(evt *events.Message) {
 	}
 
 	if command == "!audio" {
-		audioName := strings.Replace(messageText, "!audio", "", -1)
+		parts := strings.Split(messageText, " ")
+		originalCommand := parts[0]
+		audioName := strings.Replace(messageText, originalCommand, "", -1)
+
 		go ServiceAppContext.Context.SendService.SendAudioFunny(context.Background(), fromChat, sender, audioName, stanzaID, messageText)
 	}
 

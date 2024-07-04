@@ -129,7 +129,7 @@ func SearchAudioFunnyReturnFile(name string) ([]byte, error) {
 		return nil, &SearchError{Message: "Erro ao analisar HTML", Err: err}
 	}
 
-	allButtonSearched := htmlquery.Find(doc, "//div[@class='instant']")
+	allButtonSearched := htmlquery.Find(doc, "//div[@class='instant']/a")
 	if allButtonSearched == nil {
 		return nil, &SearchError{Message: "Botões não encontrado"}
 	}
@@ -137,12 +137,30 @@ func SearchAudioFunnyReturnFile(name string) ([]byte, error) {
 	var bestMatchDivPosition int
 	highestSimilarity := -1.0
 
-	for positionNode, node := range allButtonSearched {
-		text := htmlquery.InnerText(node)
-		similarity := smetrics.JaroWinkler(strings.ToLower(text), strings.ToLower(name), 0.7, 4)
-		if similarity > highestSimilarity {
-			highestSimilarity = similarity
-			bestMatchDivPosition = positionNode
+	if len(strings.Fields(name)) == 1 {
+		for positionNode, node := range allButtonSearched {
+			text := htmlquery.InnerText(node)
+			similarity := smetrics.JaroWinkler(strings.ToLower(strings.Split(text, " ")[0]), strings.ToLower(name), 0.7, 4)
+			if similarity > highestSimilarity {
+				highestSimilarity = similarity
+				bestMatchDivPosition = positionNode
+			}
+		}
+	}
+
+	if highestSimilarity < 0.8 {
+		for positionNode, node := range allButtonSearched {
+			text := htmlquery.InnerText(node)
+			similarity := smetrics.JaroWinkler(strings.ToLower(text), strings.ToLower(name), 0.7, 4)
+
+			if similarity > highestSimilarity {
+				highestSimilarity = similarity
+				bestMatchDivPosition = positionNode
+			}
+
+			if highestSimilarity > 0.8 {
+				break
+			}
 		}
 	}
 
