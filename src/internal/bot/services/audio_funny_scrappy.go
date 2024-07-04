@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 
 	"github.com/antchfx/htmlquery"
+	"github.com/xrash/smetrics"
 )
 
 type SearchError struct {
@@ -128,7 +129,24 @@ func SearchAudioFunnyReturnFile(name string) ([]byte, error) {
 		return nil, &SearchError{Message: "Erro ao analisar HTML", Err: err}
 	}
 
-	button := htmlquery.FindOne(doc, "//*[@id='instants_container']/div[1]/div[1]/button")
+	allButtonSearched := htmlquery.Find(doc, "//div[@class='instant']")
+	if allButtonSearched == nil {
+		return nil, &SearchError{Message: "Botões não encontrado"}
+	}
+
+	var bestMatchDivPosition int
+	highestSimilarity := -1.0
+
+	for positionNode, node := range allButtonSearched {
+		text := htmlquery.InnerText(node)
+		similarity := smetrics.JaroWinkler(strings.ToLower(text), strings.ToLower(name), 0.7, 4)
+		if similarity > highestSimilarity {
+			highestSimilarity = similarity
+			bestMatchDivPosition = positionNode
+		}
+	}
+
+	button := htmlquery.FindOne(doc, fmt.Sprintf("//*[@id='instants_container']/div[1]/div[%d]/button", bestMatchDivPosition+1))
 	if button == nil {
 		return nil, &SearchError{Message: "Botão não encontrado"}
 	}

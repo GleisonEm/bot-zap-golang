@@ -8,7 +8,7 @@ import (
 
 var (
 	AppVersion             = "v4.12.0"
-	AppPort                = "3000"
+	AppPort                = "3008"
 	AppDebug               = false
 	AppOs                  = "AldinoKemal"
 	AppPlatform            = waProto.DeviceProps_PlatformType(1)
